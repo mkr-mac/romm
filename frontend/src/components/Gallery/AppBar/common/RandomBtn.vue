@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { Emitter } from "mitt";
-import { inject } from "vue";
+import { inject, onBeforeMount, ref  } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { ROUTES } from "@/plugins/router";
 import romApi from "@/services/api/rom";
 import type { Events } from "@/types/emitter";
+import { formatBytes } from "@/utils";
+
 
 withDefaults(
   defineProps<{
@@ -27,12 +29,13 @@ const router = useRouter();
 const emitter = inject<Emitter<Events>>("emitter");
 
 async function goToRandomGame() {
+  
   try {
     const apiParams = {
       limit: 1,
       offset: 0,
     };
-
+  /*
     // Get the total count first
     const { data: romsResponse } = await romApi.getRoms(apiParams);
 
@@ -45,9 +48,25 @@ async function goToRandomGame() {
       });
       return;
     }
+    */
+    const stats = ref({
+      PLATFORMS: 0,
+      ROMS: 0,
+      SAVES: 0,
+      STATES: 0,
+      SCREENSHOTS: 0,
+      TOTAL_FILESIZE_BYTES: 0,
+    });
+    
+    onBeforeMount(() => {
+      api.get("/stats").then(({ data }) => {
+        stats.value = data;
+      });
+    });
+
 
     // Get a random offset between 0 and total-1
-    const randomOffset = Math.floor(Math.random() * romsResponse.total);
+    const randomOffset = Math.floor(Math.random() * stats.ROMS);
     const { data: randomRomResponse } = await romApi.getRoms({
       ...apiParams,
       offset: randomOffset,
